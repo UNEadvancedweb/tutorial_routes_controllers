@@ -5,11 +5,11 @@ import play.mvc.Result;
 
 public class Application extends Controller {
 
-    public static Result index() {
+    public Result index() {
         return ok("My my, I do believe it worked.");
     }
 
-    public static Result upper(String input) {
+    public Result upper(String input) {
         return ok(input.toUpperCase());
     }
 
