@@ -1,5 +1,6 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -31,15 +32,23 @@ public class CaptchaController extends Controller  {
         sb.append("<style>img { max-width: 300px; }</style>\n");
         sb.append("<h2>Let's play spot the beagle!</h2>\n");
 
+
+
+        sb.append("<form method='POST'>");
         sb.append("<ul>\n");
 
         for (int idx : indexes) {
             sb.append("<li>\n");
             sb.append(String.format("<img src='%s' />\n", Captcha.getPhoto(idx)));
+            sb.append(String.format("<input type=\"checkbox\" name=\"beagle\" value=\"%d\" /> <label>It's a beagle!</label>", idx));
+            sb.append(String.format("<input type=\"hidden\" name=\"sent\" value=\"%d\" /> <label>It's a beagle!</label>", idx));
             sb.append("</li>\n");
         }
 
         sb.append("</ul>\n");
+
+        sb.append("<button type=\"submit\">Submit</input>");
+        sb.append("</form>");
 
         return ok(sb.toString()).as("text/html");
     }
@@ -55,7 +64,7 @@ public class CaptchaController extends Controller  {
     }
 
     /**
-     * Controller action for receiving the list of checked pixels
+     * Controller action for receiving the list of checked pictures
      */
     public Result matches() {
         String[] sent = request().body().asFormUrlEncoded().get("sent");
@@ -64,7 +73,7 @@ public class CaptchaController extends Controller  {
         int numBeagles = countBeagles(sent);
         int numFound = countBeagles(beagles);
 
-        return ok(String.format("You found %d of %d beagles", numBeagles, numFound));
+        return ok(String.format("You found %d of %d beagles", numFound, numBeagles));
     }
 
     /**
@@ -89,9 +98,28 @@ public class CaptchaController extends Controller  {
     public Result allPicturesAsJson() {
 
         ObjectNode obj = Json.newObject();
+        ArrayNode arrayNode = Json.newArray();
+
+        for (String url : Captcha.yesPhotos) {
+            ObjectNode photo = Json.newObject();
+            photo.put("url", url);
+            photo.put("isBeagle", true);
+            arrayNode.add(photo);
+        }
+        for (String url : Captcha.noPhotos) {
+            ObjectNode photo = Json.newObject();
+            photo.put("url", url);
+            photo.put("isBeagle", false);
+            arrayNode.add(photo);
+        }
+        obj.set("photos", arrayNode);
 
         return ok(obj);
     }
 
+
+    public Result redirectTest() {
+        return redirect(routes.CaptchaController.showPictures());
+    }
 
 }
